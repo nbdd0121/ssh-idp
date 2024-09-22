@@ -1,0 +1,29 @@
+[package]
+name = "ssh-idp"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = { version = "1", features = ["backtrace"] }
+clap = { version = "4", features = ["derive"]}
+tokio = { version = "1.40", features = ["full"] }
+
+# Tracing
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing-tree = "0.4"
+
+# SSH handling
+# Use the latest version to avoid failing when SK keys exist.
+russh = { git = "https://github.com/Eugeny/russh.git", rev = "459544a5201377e18d252673cff17f7040e8c63e" }
+async-trait = "0.1.82"
+ssh-key = { version = "0.6" }
+ed25519-dalek = "2.1"
+
+# JWT handling
+# Use the latest version which has no ring dependency.
+jsonwebtoken = { git = "https://github.com/Keats/jsonwebtoken.git", rev = "c733c786fc9a31362ad21a7498cbd926d1aa7e4b" }
+serde = { version = "1", features = ["derive"] }
+
+[profile.release]
+debug = "line-tables-only"
