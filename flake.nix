@@ -1,6 +1,6 @@
 {
   inputs = {
-    # Need newer Rust, switch to 24.11 after release cut.
+    # Need Rust 1.80+, switch to 24.11 after release cut.
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
   };
