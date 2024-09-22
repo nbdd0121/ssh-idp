@@ -354,6 +354,7 @@ impl russh::server::Handler for Handler {
 
         let data = CryptoVec::from(format!("{token}\n", token = token.to_string()));
         session.data(channel, data);
+        session.exit_status_request(channel, 0);
         session.close(channel);
         Ok(())
     }
