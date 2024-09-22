@@ -81,8 +81,8 @@ async fn main() -> Result<()> {
 
     let config = russh::server::Config {
         methods: russh::MethodSet::PUBLICKEY,
-        auth_rejection_time: std::time::Duration::from_secs(1),
-        auth_rejection_time_initial: Some(std::time::Duration::from_secs(0)),
+        auth_rejection_time: Duration::from_millis(10),
+        auth_rejection_time_initial: Some(Duration::ZERO),
         keys: vec![ssh_keypair],
         ..Default::default()
     };
