@@ -49,7 +49,7 @@
           };
 
           docker = pkgs.dockerTools.buildImage {
-            name = "ssh-idp-docker";
+            name = "ssh-idp";
             tag = "latest";
             copyToRoot = [
               (pkgs.runCommandLocal "" { } ''
