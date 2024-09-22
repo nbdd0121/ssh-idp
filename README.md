@@ -30,7 +30,7 @@ These options are required for the `ssh-idp` server:
 * SSH host key
 
   Host key used by SSH server.
-  Currently only ED25519 keys are supported, and should be unencrypted.
+  Only unencrypted keys are supported.
 
   This can be generated using `ssh-keygen`:
 

@@ -7,7 +7,6 @@ use std::time::{Duration, SystemTime};
 use anyhow::{Context, Result};
 use async_trait::async_trait;
 use clap::Parser;
-use ed25519_dalek::SigningKey;
 use jsonwebtoken::EncodingKey;
 use russh::keys::PublicKeyBase64;
 use russh::server::{Auth, Msg, Server as _, Session};
@@ -34,8 +33,6 @@ struct Options {
     jwt_valid_duration: Duration,
 
     /// SSH host private key of the server.
-    ///
-    /// Currently only ED25519 keys are supported.
     #[arg(long)]
     ssh_host_key: PathBuf,
 
@@ -80,16 +77,7 @@ async fn main() -> Result<()> {
     SIGNING_KEY.set(signing_key).map_err(|_| ()).unwrap();
 
     // Read SSH host key.
-    let ssh_private_key = ssh_key::PrivateKey::read_openssh_file(&OPTIONS.ssh_host_key)
-        .context("Cannot read SSH host key")?;
-    let ssh_keypair = russh::keys::key::KeyPair::Ed25519(SigningKey::from_bytes(
-        &ssh_private_key
-            .key_data()
-            .ed25519()
-            .context("Only ED25519 host key is supported")?
-            .private
-            .to_bytes(),
-    ));
+    let ssh_keypair = russh::keys::load_secret_key(&OPTIONS.ssh_host_key, None)?;
 
     let config = russh::server::Config {
         methods: russh::MethodSet::PUBLICKEY,
