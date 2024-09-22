@@ -26,7 +26,7 @@
           cargoLock = {
             lockFile = ./Cargo.lock;
             outputHashes = {
-              "jsonwebtoken-9.3.0" = "sha256-9N4kjOAAth0t2xRLnzuWl/wngee9SAnlI/rOPYcdtkE=";
+              "jsonwebtoken-9.3.0" = "sha256-ZDdT3JW9mABZDBTkzMaHml1VbZryIJDsuoEz1vSDRhE=";
               "pageant-0.0.1-beta.3" = "sha256-EC7yGPUIVlN2N++IchAvbtaWK+x9kV9v7oUhElw2WZY=";
             };
           };
