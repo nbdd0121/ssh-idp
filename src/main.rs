@@ -1,6 +1,8 @@
+mod util;
+
 use std::path::PathBuf;
 use std::sync::{Arc, LazyLock, OnceLock};
-use std::time::SystemTime;
+use std::time::{Duration, SystemTime};
 
 use anyhow::{Context, Result};
 use async_trait::async_trait;
@@ -24,6 +26,12 @@ struct Options {
     /// Issuer URL for the JWT.
     #[arg(long)]
     jwt_issuer: String,
+
+    /// Valid duration of the JWT token.
+    ///
+    /// Should not be longer than 24 hours.
+    #[arg(long, default_value = "12hr", value_parser = humantime::parse_duration)]
+    jwt_valid_duration: Duration,
 
     /// SSH host private key of the server.
     ///
@@ -273,24 +281,55 @@ impl russh::server::Handler for Handler {
             return Ok(());
         };
 
-        let issue_time = SystemTime::now()
-            .duration_since(SystemTime::UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_secs();
-        let expiration = issue_time + 12 * 3600;
+        let issue_time = SystemTime::now();
+        let expiration = issue_time + OPTIONS.jwt_valid_duration;
 
-        #[derive(Debug, serde::Serialize)]
+        fn serialize_timestamp<S: serde::Serializer>(
+            time: &SystemTime,
+            s: S,
+        ) -> Result<S::Ok, S::Error> {
+            let time = time
+                .duration_since(SystemTime::UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_secs();
+            s.serialize_u64(time)
+        }
+
+        #[derive(serde::Serialize)]
         struct Claims<'a> {
             iss: &'a str,
             aud: &'a str,
-            exp: u64,
-            iat: u64,
+            #[serde(serialize_with = "serialize_timestamp")]
+            exp: SystemTime,
+            #[serde(serialize_with = "serialize_timestamp")]
+            iat: SystemTime,
             sub: &'a str,
 
             // Custom claim for permitted host names.
             // Only use this if multiple hosts are associated are associated with this public key.
             #[serde(skip_serializing_if = "Option::is_none")]
             sans: Option<&'a [String]>,
+        }
+
+        impl std::fmt::Debug for Claims<'_> {
+            fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                let mut fmt = formatter.debug_struct("Claims");
+                fmt.field("iss", &self.iss)
+                    .field("aud", &self.aud)
+                    .field(
+                        "exp",
+                        &util::FmtAsDisplay(humantime::format_rfc3339_seconds(self.exp)),
+                    )
+                    .field(
+                        "iat",
+                        &util::FmtAsDisplay(humantime::format_rfc3339_seconds(self.iat)),
+                    )
+                    .field("sub", &self.sub);
+                if let Some(sans) = self.sans {
+                    fmt.field("sans", &sans);
+                }
+                fmt.finish()
+            }
         }
 
         let claims = Claims {

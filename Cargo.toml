@@ -8,6 +8,8 @@ anyhow = { version = "1", features = ["backtrace"] }
 clap = { version = "4", features = ["derive"]}
 tokio = { version = "1.40", features = ["full"] }
 
+humantime = "2"
+
 # Tracing
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
