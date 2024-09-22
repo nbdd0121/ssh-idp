@@ -6,8 +6,8 @@ license = "MIT OR Apache-2.0"
 
 [dependencies]
 anyhow = { version = "1", features = ["backtrace"] }
-clap = { version = "4", features = ["derive"]}
-tokio = { version = "1.40", features = ["full"] }
+clap = { version = "4", features = ["derive"] }
+tokio = { version = "1.40", features = ["rt", "macros"] }
 
 humantime = "2"
 
