@@ -1623,6 +1623,7 @@ dependencies = [
  "clap",
  "humantime",
  "jsonwebtoken",
+ "rsa",
  "russh",
  "serde",
  "ssh-key",

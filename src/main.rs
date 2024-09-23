@@ -8,13 +8,16 @@ use anyhow::{Context, Result};
 use async_trait::async_trait;
 use clap::Parser;
 use jsonwebtoken::EncodingKey;
+use rsa::pkcs1::{DecodeRsaPrivateKey, EncodeRsaPrivateKey};
+use rsa::pkcs8::DecodePrivateKey;
+use rsa::RsaPrivateKey;
 use russh::keys::PublicKeyBase64;
 use russh::server::{Auth, Msg, Server as _, Session};
 use russh::{ChannelId, CryptoVec};
 use ssh_key::public::Ed25519PublicKey;
 use tracing_subscriber::layer::SubscriberExt;
 
-static SIGNING_KEY: OnceLock<EncodingKey> = OnceLock::new();
+static SIGNING_KEY: OnceLock<RsaPrivateKey> = OnceLock::new();
 
 #[derive(Parser)]
 struct Options {
@@ -70,11 +73,13 @@ async fn main() -> Result<()> {
     LazyLock::force(&OPTIONS);
 
     // Read JWT signing key
-    let signing_key = EncodingKey::from_rsa_pem(
-        &std::fs::read(&OPTIONS.jwt_signing_key).context("Cannot read JWT signing key")?,
-    )
-    .map_err(|err| anyhow::anyhow!(err))?;
-    SIGNING_KEY.set(signing_key).map_err(|_| ()).unwrap();
+    {
+        let signing_key_pem = std::fs::read_to_string(&OPTIONS.jwt_signing_key)
+            .context("Cannot read JWT signing key")?;
+        let signing_key = RsaPrivateKey::from_pkcs8_pem(&signing_key_pem)
+            .or_else(|_| RsaPrivateKey::from_pkcs1_pem(&signing_key_pem))?;
+        SIGNING_KEY.set(signing_key).map_err(|_| ()).unwrap();
+    }
 
     // Read SSH host key.
     let ssh_keypair = russh::keys::load_secret_key(&OPTIONS.ssh_host_key, None)?;
@@ -112,7 +117,7 @@ impl russh::server::Server for Server {
     }
 
     fn handle_session_error(&mut self, err: <Self::Handler as russh::server::Handler>::Error) {
-        tracing::debug!(name: "session error", ?err);
+        tracing::debug!(name: "session error", %err);
     }
 }
 
@@ -163,7 +168,7 @@ fn pubkey_to_ed25519(public_key: &russh::keys::key::PublicKey) -> Option<Ed25519
 
 #[async_trait]
 impl russh::server::Handler for Handler {
-    type Error = russh::Error;
+    type Error = anyhow::Error;
 
     async fn auth_publickey_offered(
         &mut self,
@@ -335,10 +340,13 @@ impl russh::server::Handler for Handler {
 
         tracing::info!(?claims);
 
+        let key = SIGNING_KEY.get().unwrap().to_pkcs1_der()?;
+        let key = EncodingKey::from_rsa_der(key.as_bytes());
+
         let token = match jsonwebtoken::encode(
             &jsonwebtoken::Header::new(jsonwebtoken::Algorithm::RS256),
             &claims,
-            SIGNING_KEY.get().unwrap(),
+            &key,
         ) {
             Ok(v) => v,
             Err(err) => {

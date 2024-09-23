@@ -27,6 +27,7 @@ ssh-key = "0.6"
 # Use the latest version (new-backends branch) which has no ring dependency.
 jsonwebtoken = { git = "https://github.com/Keats/jsonwebtoken.git", rev = "e5ba5a1dcaf546798895a921cee41bce3ebb6e53" }
 serde = { version = "1", features = ["derive"] }
+rsa = "0.9.6"
 
 [profile.release]
 debug = "line-tables-only"
