@@ -1,3 +1,4 @@
+mod http;
 mod util;
 
 use std::path::PathBuf;
@@ -43,13 +44,17 @@ struct Options {
     #[arg(long)]
     known_hosts: PathBuf,
 
-    /// Listening address of SSH server.
+    /// Listening address of the server.
     #[arg(long, default_value = "0.0.0.0")]
-    ssh_addr: String,
+    listen_addr: String,
 
     /// Listening port of SSH server.
     #[arg(long, default_value = "2222")]
     ssh_port: u16,
+
+    /// Listening port of the HTTP server.
+    #[arg(long, default_value = "8080")]
+    http_port: u16,
 }
 
 static OPTIONS: LazyLock<Options> = LazyLock::new(Options::parse);
@@ -92,13 +97,23 @@ async fn main() -> Result<()> {
         ..Default::default()
     };
 
-    Server
-        .run_on_address(
-            Arc::new(config),
-            (OPTIONS.ssh_addr.as_str(), OPTIONS.ssh_port),
-        )
-        .await
-        .context("Cannot start SSH server")?;
+    let http = async {
+        http::listen(OPTIONS.listen_addr.as_str(), OPTIONS.http_port)
+            .await
+            .context("HTTP server error")
+    };
+
+    let ssh = async {
+        Server
+            .run_on_address(
+                Arc::new(config),
+                (OPTIONS.listen_addr.as_str(), OPTIONS.ssh_port),
+            )
+            .await
+            .context("Cannot start SSH server")
+    };
+
+    tokio::try_join!(http, ssh)?;
 
     Ok(())
 }

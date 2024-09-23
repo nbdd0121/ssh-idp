@@ -1,10 +1,12 @@
 # SSH IdP
 
-An JWT identity provider based on SSH.
+An OIDC identity provider based on SSH.
 
 `ssh-idp` runs as a SSH server.
 When a SSH client make connection to `ssh-idp`, it checks the public key against a preconfigured list of known identities.
 If an entry matches, the identity is confirmed, and a JWT token is signed.
+
+`ssh-idp` will also run a HTTP server that serves `.well-known/openid-configuration` and JWKS.
 
 Currently only ED25519 SSH keys are supported.
 
@@ -61,7 +63,7 @@ Example:
 ssh-idp --jwt-signing-key sign.key --jwt-issuer https://example.com --ssh-host-key ssh_host_key --known-hosts known_hosts
 ```
 
-Additional, SSH listening address and ports can be configured using `--ssh-addr` and `--ssh-port`, and JWT valid duratiton can be configured with `--jwt-valid-duration`.
+Additional, listening address and ports can be configured using `--listen-addr`, `--ssh-port` and `--http-port`, and JWT valid duratiton can be configured with `--jwt-valid-duration`.
 
 ## Usage
 

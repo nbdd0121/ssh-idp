@@ -28,6 +28,11 @@ ssh-key = "0.6"
 jsonwebtoken = { git = "https://github.com/Keats/jsonwebtoken.git", rev = "e5ba5a1dcaf546798895a921cee41bce3ebb6e53" }
 serde = { version = "1", features = ["derive"] }
 rsa = "0.9.6"
+base64ct = "1.6"
+
+# HTTP handling
+axum = { version = "0.7.6", features = ["macros"] }
+tower-http = { version = "0.6", features = ["trace"] }
 
 [profile.release]
 debug = "line-tables-only"
