@@ -48,17 +48,11 @@
             };
           };
 
-          docker = pkgs.dockerTools.buildImage {
+          docker = pkgs.dockerTools.buildLayeredImage {
             name = "ssh-idp";
             tag = "latest";
-            copyToRoot = [
-              (pkgs.runCommandLocal "" { } ''
-                mkdir -p $out/work
-              '')
-            ];
             config = {
               Entrypoint = [ (lib.getExe ssh-idp) ];
-              WorkingDir = "/work";
             };
           };
         };
