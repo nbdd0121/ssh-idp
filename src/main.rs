@@ -132,7 +132,7 @@ impl russh::server::Server for Server {
     }
 
     fn handle_session_error(&mut self, err: <Self::Handler as russh::server::Handler>::Error) {
-        tracing::debug!(name: "session error", %err);
+        tracing::debug!(%err, "session error");
     }
 }
 
@@ -145,7 +145,7 @@ struct Handler {
 fn check_key(key: &Ed25519PublicKey) -> Vec<String> {
     // This is read everything instead of at start-up allow hot updating.
     let entries = ssh_key::KnownHosts::read_file(&OPTIONS.known_hosts).unwrap_or_else(|err| {
-        tracing::error!(name: "cannot read known_hosts", ?err);
+        tracing::error!(?err, "cannot read known_hosts");
         Vec::new()
     });
 
@@ -210,7 +210,7 @@ impl russh::server::Handler for Handler {
             });
         };
 
-        tracing::debug!(name: "host recognised", ?hosts);
+        tracing::debug!(?hosts, "host recognised");
 
         self.pubkey = Some(key);
         self.hosts = hosts;
@@ -234,7 +234,7 @@ impl russh::server::Handler for Handler {
             });
         }
 
-        tracing::info!(name: "authenticated", public_key = ?public_key.public_key_base64());
+        tracing::info!(public_key = ?public_key.public_key_base64(), "authenticated");
 
         Ok(Auth::Accept)
     }
@@ -365,7 +365,7 @@ impl russh::server::Handler for Handler {
         ) {
             Ok(v) => v,
             Err(err) => {
-                tracing::info!(name: "signing failed", ?err);
+                tracing::info!(?err, "signing failed");
                 session.data(
                     channel,
                     CryptoVec::from(format!("Error: cannot sign JWT: {:?}\r\n", err)),
