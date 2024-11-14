@@ -19,7 +19,7 @@ tracing-tree = "0.4"
 
 # SSH handling
 # Use the latest version to avoid failing when SK keys exist.
-russh = { git = "https://github.com/Eugeny/russh.git", rev = "459544a5201377e18d252673cff17f7040e8c63e" }
+russh = "0.46"
 async-trait = "0.1.82"
 ssh-key = "0.6"
 
