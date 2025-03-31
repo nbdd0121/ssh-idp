@@ -6,7 +6,6 @@ use std::sync::{Arc, LazyLock, OnceLock};
 use std::time::{Duration, SystemTime};
 
 use anyhow::{Context, Result};
-use async_trait::async_trait;
 use clap::Parser;
 use jsonwebtoken::EncodingKey;
 use rsa::pkcs1::{DecodeRsaPrivateKey, EncodeRsaPrivateKey};
@@ -90,7 +89,7 @@ async fn main() -> Result<()> {
     let ssh_keypair = russh::keys::load_secret_key(&OPTIONS.ssh_host_key, None)?;
 
     let config = russh::server::Config {
-        methods: russh::MethodSet::PUBLICKEY,
+        methods: [russh::MethodKind::PublicKey][..].into(),
         auth_rejection_time: Duration::from_millis(10),
         auth_rejection_time_initial: Some(Duration::ZERO),
         keys: vec![ssh_keypair],
@@ -165,7 +164,7 @@ fn check_key(key: &Ed25519PublicKey) -> Vec<String> {
     hosts
 }
 
-fn pubkey_to_ed25519(public_key: &russh::keys::key::PublicKey) -> Option<Ed25519PublicKey> {
+fn pubkey_to_ed25519(public_key: &russh::keys::PublicKey) -> Option<Ed25519PublicKey> {
     // No public method exposed from pubkey to check algorithm, so we need to use byte form.
     // The bytes have format <u32 BE length><type><u32 BE length><key>
     let public_key_bytes = public_key.public_key_bytes();
@@ -181,14 +180,13 @@ fn pubkey_to_ed25519(public_key: &russh::keys::key::PublicKey) -> Option<Ed25519
     Some(public_key_bytes[4 + 11 + 4..].try_into().unwrap())
 }
 
-#[async_trait]
 impl russh::server::Handler for Handler {
     type Error = anyhow::Error;
 
     async fn auth_publickey_offered(
         &mut self,
         _user: &str,
-        public_key: &russh::keys::key::PublicKey,
+        public_key: &russh::keys::PublicKey,
     ) -> Result<Auth, Self::Error> {
         let _enter = self.span.enter();
         let span = tracing::debug_span!("public key offered", public_key = ?public_key.public_key_base64());
@@ -197,6 +195,7 @@ impl russh::server::Handler for Handler {
         let Some(key) = pubkey_to_ed25519(public_key) else {
             return Ok(Auth::Reject {
                 proceed_with_methods: None,
+                partial_success: false,
             });
         };
 
@@ -207,6 +206,7 @@ impl russh::server::Handler for Handler {
 
             return Ok(Auth::Reject {
                 proceed_with_methods: None,
+                partial_success: false,
             });
         };
 
@@ -221,7 +221,7 @@ impl russh::server::Handler for Handler {
     async fn auth_publickey(
         &mut self,
         _: &str,
-        public_key: &russh::keys::key::PublicKey,
+        public_key: &russh::keys::PublicKey,
     ) -> Result<Auth, Self::Error> {
         let _enter = self.span.enter();
 
@@ -231,6 +231,7 @@ impl russh::server::Handler for Handler {
             tracing::error!("authenticated public key differs from offered public key");
             return Ok(Auth::Reject {
                 proceed_with_methods: None,
+                partial_success: false,
             });
         }
 
@@ -260,9 +261,9 @@ impl russh::server::Handler for Handler {
         session.data(
             channel,
             CryptoVec::from("Error: no audience is specified.\r\n".to_owned()),
-        );
-        session.exit_status_request(channel, 1);
-        session.close(channel);
+        )?;
+        session.exit_status_request(channel, 1)?;
+        session.close(channel)?;
         Ok(())
     }
 
@@ -284,8 +285,8 @@ impl russh::server::Handler for Handler {
             session.data(
                 channel,
                 CryptoVec::from("Error: audience is not UTF-8.\r\n".to_owned()),
-            );
-            session.exit_status_request(channel, 1);
+            )?;
+            session.exit_status_request(channel, 1)?;
             return Ok(());
         };
 
@@ -369,16 +370,16 @@ impl russh::server::Handler for Handler {
                 session.data(
                     channel,
                     CryptoVec::from(format!("Error: cannot sign JWT: {:?}\r\n", err)),
-                );
-                session.exit_status_request(channel, 1);
+                )?;
+                session.exit_status_request(channel, 1)?;
                 return Ok(());
             }
         };
 
         let data = CryptoVec::from(format!("{token}\n", token = token.to_string()));
-        session.data(channel, data);
-        session.exit_status_request(channel, 0);
-        session.close(channel);
+        session.data(channel, data)?;
+        session.exit_status_request(channel, 0)?;
+        session.close(channel)?;
         Ok(())
     }
 }
