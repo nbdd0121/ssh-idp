@@ -18,13 +18,12 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 tracing-tree = "0.4"
 
 # SSH handling
-russh = "0.51"
+russh = "0.54"
 async-trait = "0.1.82"
 ssh-key = "0.6"
 
 # JWT handling
-# Use the latest version (new-backends branch) which has no ring dependency.
-jsonwebtoken = { git = "https://github.com/Keats/jsonwebtoken.git", rev = "e5ba5a1dcaf546798895a921cee41bce3ebb6e53" }
+jsonwebtoken = { version = "10.0.0", features = ["aws_lc_rs"] }
 serde = { version = "1", features = ["derive"] }
 rsa = "0.9.6"
 base64ct = "1.6"

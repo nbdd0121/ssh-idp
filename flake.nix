@@ -36,9 +36,6 @@
             };
             cargoLock = {
               lockFile = ./Cargo.lock;
-              outputHashes = {
-                "jsonwebtoken-9.3.0" = "sha256-ZDdT3JW9mABZDBTkzMaHml1VbZryIJDsuoEz1vSDRhE=";
-              };
             };
 
             meta = {
