@@ -27,7 +27,7 @@ struct OpenIdConfiguration {
 async fn openid_configuration() -> Json<OpenIdConfiguration> {
     Json(OpenIdConfiguration {
         issuer: &OPTIONS.jwt_issuer,
-        jwks_uri: format!("{}/jwks", OPTIONS.jwt_issuer),
+        jwks_uri: format!("{}/.well-known/jwks.json", OPTIONS.jwt_issuer),
         scopes_supported: &["openid"],
         response_types_supported: &["id_token"],
         subject_types_supported: &["public"],
@@ -73,7 +73,12 @@ pub async fn listen(listen_addr: &str, port: u16) -> Result<()> {
                 .layer(CorsLayer::new().allow_origin(Any))
                 .fallback(wrong_method),
         )
-        .route("/jwks", get(jwks).fallback(wrong_method))
+        .route(
+            "/.well-known/jwks.json",
+            get(jwks)
+                .layer(CorsLayer::new().allow_origin(Any))
+                .fallback(wrong_method),
+        )
         .fallback(not_found)
         .layer(
             TraceLayer::new_for_http().make_span_with(DefaultMakeSpan::new().level(Level::INFO)),
