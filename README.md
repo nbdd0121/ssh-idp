@@ -69,14 +69,14 @@ Additional, listening address and ports can be configured using `--listen-addr`,
 
 To use the SSH IdP server to obtain a JWT token, one can simply use SSH to do it:
 ```sh
-ssh idp-server -p 2222 <audience>
+ssh idp-server -p 2222 token <audience>
 ```
 
 Audience is required, and this should be reflecting the party that is expecting this JWT token.
 
 Example:
 ```console
-$ ssh idp-server -p 2222 https://example.com
+$ ssh idp-server -p 2222 token https://example.com
 eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpc...
 ```
 
@@ -104,7 +104,7 @@ my-machine.example.com ssh-ed25519 AAAA...
 
 The *root* user on the machine then can use SSH to obtain a token identifying the machine:
 ```sh
-ssh -o IdentitiesOnly=yes -i /etc/ssh/ssh_host_ed25519_key idp-server -p 2222 <audience>
+ssh -o IdentitiesOnly=yes -i /etc/ssh/ssh_host_ed25519_key idp-server -p 2222 token <audience>
 ```
 
 Note that we're now using the host key as SSH identity so it identifies the host instead of the root user.

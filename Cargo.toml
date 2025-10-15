@@ -11,6 +11,7 @@ clap = { version = "4", features = ["derive"] }
 tokio = { version = "1.40", features = ["rt-multi-thread", "macros"] }
 
 humantime = "2"
+shellish_parse = "2"
 
 # Tracing
 tracing = "0.1"
