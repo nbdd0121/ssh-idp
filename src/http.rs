@@ -5,6 +5,7 @@ use axum::{Json, Router};
 use base64ct::Encoding;
 use jsonwebtoken::jwk::{self, Jwk, JwkSet};
 use rsa::traits::PublicKeyParts;
+use tower_http::cors::{Any, CorsLayer};
 use tower_http::trace::{DefaultMakeSpan, TraceLayer};
 use tracing::Level;
 
@@ -68,7 +69,9 @@ pub async fn listen(listen_addr: &str, port: u16) -> Result<()> {
     let app = Router::new()
         .route(
             "/.well-known/openid-configuration",
-            get(openid_configuration).fallback(wrong_method),
+            get(openid_configuration)
+                .layer(CorsLayer::new().allow_origin(Any))
+                .fallback(wrong_method),
         )
         .route("/jwks", get(jwks).fallback(wrong_method))
         .fallback(not_found)
