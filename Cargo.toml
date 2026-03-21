@@ -3,7 +3,7 @@ name = "ssh-idp"
 version = "0.1.0"
 edition = "2024"
 license = "MIT OR Apache-2.0"
-rust-version = "1.86"
+rust-version = "1.91"
 
 [dependencies]
 anyhow = { version = "1", features = ["backtrace"] }
@@ -19,7 +19,7 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 tracing-tree = "0.4"
 
 # SSH handling
-russh = "0.54"
+russh = "0.58"
 async-trait = "0.1.82"
 ssh-key = "0.6"
 
