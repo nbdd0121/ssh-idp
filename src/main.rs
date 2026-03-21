@@ -11,9 +11,9 @@ use jsonwebtoken::EncodingKey;
 use rsa::RsaPrivateKey;
 use rsa::pkcs1::{DecodeRsaPrivateKey, EncodeRsaPrivateKey};
 use rsa::pkcs8::DecodePrivateKey;
+use russh::ChannelId;
 use russh::keys::PublicKeyBase64;
 use russh::server::{Auth, Msg, Server as _, Session};
-use russh::{ChannelId, CryptoVec};
 use ssh_key::public::Ed25519PublicKey;
 use tracing_subscriber::layer::SubscriberExt;
 
@@ -257,10 +257,7 @@ impl russh::server::Handler for Handler {
         tracing::info!("deny shell requests");
 
         // We get this if client side just does SSH without any command.
-        session.data(
-            channel,
-            CryptoVec::from("Error: no command is specified.\r\n".to_owned()),
-        )?;
+        session.data(channel, "Error: no command is specified.\r\n")?;
         session.exit_status_request(channel, 1)?;
         session.close(channel)?;
         Ok(())
@@ -278,10 +275,7 @@ impl russh::server::Handler for Handler {
 
         let Ok(command) = std::str::from_utf8(data) else {
             tracing::info!("command is not UTF-8");
-            session.data(
-                channel,
-                CryptoVec::from("Error: command is not UTF-8.\r\n".to_owned()),
-            )?;
+            session.data(channel, "Error: command is not UTF-8.\r\n")?;
             session.exit_status_request(channel, 1)?;
             session.close(channel)?;
             return Ok(());
@@ -291,10 +285,7 @@ impl russh::server::Handler for Handler {
             Ok(v) => v,
             Err(err) => {
                 tracing::info!("command parsing failed");
-                session.data(
-                    channel,
-                    CryptoVec::from(format!("Error: cannot parse command: {}\r\n", err)),
-                )?;
+                session.data(channel, format!("Error: cannot parse command: {}\r\n", err))?;
                 session.exit_status_request(channel, 1)?;
                 session.close(channel)?;
                 return Ok(());
@@ -310,7 +301,7 @@ impl russh::server::Handler for Handler {
             Ok(v) => v,
             Err(err) => {
                 tracing::info!("command parsing failed");
-                session.data(channel, CryptoVec::from(err.to_string()))?;
+                session.data(channel, err.to_string())?;
                 session.exit_status_request(channel, 1)?;
                 session.close(channel)?;
                 return Ok(());
@@ -399,17 +390,13 @@ impl russh::server::Handler for Handler {
                     Ok(v) => v,
                     Err(err) => {
                         tracing::info!(?err, "signing failed");
-                        session.data(
-                            channel,
-                            CryptoVec::from(format!("Error: cannot sign JWT: {:?}\r\n", err)),
-                        )?;
+                        session.data(channel, format!("Error: cannot sign JWT: {:?}\r\n", err))?;
                         session.exit_status_request(channel, 1)?;
                         return Ok(());
                     }
                 };
 
-                let data = CryptoVec::from(format!("{token}\n", token = token.to_string()));
-                session.data(channel, data)?;
+                session.data(channel, format!("{token}\n"))?;
                 session.exit_status_request(channel, 0)?;
                 session.close(channel)?;
             }
