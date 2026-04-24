@@ -19,9 +19,8 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 tracing-tree = "0.4"
 
 # SSH handling
-russh = "0.58"
+russh = "0.60"
 async-trait = "0.1.82"
-ssh-key = "0.6"
 
 # JWT handling
 jsonwebtoken = { version = "10.0.0", features = ["aws_lc_rs"] }

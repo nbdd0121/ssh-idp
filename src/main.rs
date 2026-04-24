@@ -13,8 +13,9 @@ use rsa::pkcs1::{DecodeRsaPrivateKey, EncodeRsaPrivateKey};
 use rsa::pkcs8::DecodePrivateKey;
 use russh::ChannelId;
 use russh::keys::PublicKeyBase64;
+use russh::keys::ssh_key;
+use russh::keys::ssh_key::public::Ed25519PublicKey;
 use russh::server::{Auth, Msg, Server as _, Session};
-use ssh_key::public::Ed25519PublicKey;
 use tracing_subscriber::layer::SubscriberExt;
 
 static SIGNING_KEY: OnceLock<RsaPrivateKey> = OnceLock::new();
